@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TubeMatrix - Show</title>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body class="tm-show">
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div class="logo">TubeMatrix</div>
+
+    <div class="top-actions">
+      <button id="btnOpenSetup" type="button">SETUP</button>
+    </div>
+
+    <div class="status">
+      DDP: <span id="ddpStatusDot">●</span>
+      <span id="ddpStatusText">Unknown</span>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- LEFT / CHANNEL A -->
+    <div id="panel-left" class="panel">
+      <div class="panel-head">
+        <h3>CHANNEL A</h3>
+      </div>
+
+      <div class="module">
+        <h4>Preset</h4>
+        <div class="row">
+          <select id="presetSelectA"></select>
+          <button id="btnLoadPresetA" type="button">Load</button>
+        </div>
+        <div class="row">
+          <button id="btnSavePresetA" type="button">Save as…</button>
+        </div>
+      </div>
+
+      <div class="module">
+        <h4>Color</h4>
+        <div class="row">
+          <input id="colorA" type="color" value="#ffffff" />
+          <span id="colorALabel" class="muted">A</span>
+        </div>
+      </div>
+
+      <div class="module">
+        <h4>Shapes</h4>
+        <div class="row">
+          <button type="button" disabled>+ Circle</button>
+          <button type="button" disabled>+ Rect</button>
+        </div>
+        <div class="row">
+          <button type="button" disabled>+ Line</button>
+          <button type="button" disabled>+ Wave</button>
+        </div>
+        <div class="muted">V1: zatím jen struktura (přidáme po routingu).</div>
+      </div>
+    </div>
+
+    <!-- LIVE VIEW -->
+    <div id="center-col">
+      <div id="liveview-wrap">
+        <canvas id="liveView"></canvas>
+      </div>
+
+      <div id="crossfade-bar">
+        <span class="xfade-label">A</span>
+        <input type="range" id="xfade" min="-100" max="100" step="1" value="0">
+        <span class="xfade-label">B</span>
+        <span id="xfadeValue" class="muted">0</span>
+      </div>
+    </div>
+
+    <!-- RIGHT / CHANNEL B -->
+    <div id="panel-right" class="panel">
+      <div class="panel-head">
+        <h3>CHANNEL B</h3>
+      </div>
+
+      <div class="module">
+        <h4>Preset</h4>
+        <div class="row">
+          <select id="presetSelectB"></select>
+          <button id="btnLoadPresetB" type="button">Load</button>
+        </div>
+        <div class="row">
+          <button id="btnSavePresetB" type="button">Save as…</button>
+        </div>
+      </div>
+
+      <div class="module">
+        <h4>Color</h4>
+        <div class="row">
+          <input id="colorB" type="color" value="#ffffff" />
+          <span id="colorBLabel" class="muted">B</span>
+        </div>
+      </div>
+
+      <div class="module">
+        <h4>Shapes</h4>
+        <div class="row">
+          <button type="button" disabled>+ Circle</button>
+          <button type="button" disabled>+ Rect</button>
+        </div>
+        <div class="row">
+          <button type="button" disabled>+ Line</button>
+          <button type="button" disabled>+ Wave</button>
+        </div>
+        <div class="muted">V1: zatím jen struktura (přidáme po routingu).</div>
+      </div>
+    </div>
+
+  </div>
+<div class="bottom-right muted">
+      Output = mix(A,B) • LiveView = output
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/state.js"></script>
+  <script src="js/derived.js"></script>
+  <script src="js/liveview.js"></script>
+  <script src="js/ddp_client.js"></script>
+  <script src="js/show.js"></script>
+
+</body>
+</html>

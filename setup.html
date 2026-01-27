@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TubeMatrix - Setup</title>
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+
+  <!-- =========================
+       TOP BAR (SETUP)
+       ========================= -->
+  <header class="topbar topbar-setup">
+    <div class="topbar-left">TubeMatrix SETUP</div>
+    <div class="topbar-right">
+      <span id="activeProfileText">ACTIVE: (local)</span>
+      <a class="btn" href="index.html">EXIT</a>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="left">
+      <canvas id="liveView" width="900" height="520"></canvas>
+
+      <!-- malý hint -->
+      <div class="hint">
+        Klik na zařízení = select. (Set Center přidáme hned další krok)
+      </div>
+    </section>
+
+    <section class="right">
+      <div class="panel">
+
+<div class="tabs">
+  <button class="tab tab-load"  data-tab="load">LOAD</button>
+  <button class="tab tab-add"   data-tab="add">ADD</button>
+  <button class="tab tab-edit"  data-tab="edit">EDIT</button>
+  <button class="tab tab-verify" data-tab="verify">VERIFY</button>
+  <button class="tab tab-ddp"   data-tab="ddp">DDP</button>
+</div>
+
+<div class="tabbody">
+
+  <div class="tabpane" id="tab-load">
+    <h2>PROFILE</h2>
+    <button id="btnLoadDemo" class="btn wide">Load demo profile</button>
+    <button id="btnSaveProfile" class="btn wide">Save profile</button>
+    <hr />
+    <h3>VIEW</h3>
+    <button id="btnToggleSelect" class="btn wide">Toggle selection highlight</button>
+    <button id="btnDragMode" class="btn wide">Drag mode: OFF</button>
+    <button id="btnSetCenterMode" class="btn wide">Set center: OFF</button>
+  </div>
+
+  <div class="tabpane" id="tab-add">
+    <h2>ADD FIXTURE</h2>
+    <input id="inId" placeholder="ID (např. TL_L1)" class="inp" />
+    <input id="inIp" placeholder="IP (např. 192.168.4.10)" class="inp" />
+    <input id="inW"  placeholder="W (1 nebo 5)" class="inp" />
+    <input id="inX"  placeholder="X (např. -6)" class="inp" />
+    <button id="btnAddDevice" class="btn wide">Add</button>
+  </div>
+
+  <div class="tabpane" id="tab-edit">
+    <h2>FIXTURES</h2>
+    <div id="deviceTable" class="tablewrap"></div>
+    <hr />
+
+    <div id="editPanel" style="display:none;">
+      <h3>EDIT SELECTED</h3>
+      <div class="kv">
+        <div class="k">ID</div><div class="v"><span id="edIdText">(none)</span></div>
+      </div>
+
+      <input id="edIp" placeholder="IP" class="inp" />
+      <input id="edW"  placeholder="W" class="inp" />
+      <input id="edX"  placeholder="X" class="inp" />
+
+      <label class="row row-check">
+        <input type="checkbox" id="edPixel0Bottom">
+        <span>Pixel 0 je dole</span>
+      </label>
+
+      <label class="row row-check">
+        <input type="checkbox" id="edReverseX">
+        <span>Reverse X</span>
+      </label>
+
+      <button id="btnUpdateSelected" class="btn wide">Update selected</button>
+      <button id="btnRemoveSelected" class="btn wide danger">Remove selected</button>
+    </div>
+
+    <div id="editHint" class="hint">Vyber fixture klikem v LiveView nebo v tabulce.</div>
+  </div>
+
+  <div class="tabpane" id="tab-verify">
+    <h2>VERIFY</h2>
+    <button id="btnWalk" class="btn wide verify">VERIFY WALK: OFF</button>
+    <div class="hint">Použij pro kontrolu orientace a pořadí. LiveView musí sedět 1:1 s trubicemi.</div>
+  </div>
+
+  <div class="tabpane" id="tab-ddp">
+    <h2>DDP</h2>
+    <input id="inWs" class="inp" placeholder="ws://IP:8787" />
+    <button id="btnWsConnect" class="btn wide">Connect bridge</button>
+    <div class="hint" id="ddpStatusText">Status: (unknown)</div>
+  </div>
+
+</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/state.js"></script>
+  <script src="js/derived.js"></script>
+  <script src="js/liveview.js"></script>
+  <script src="js/ddp_client.js"></script>
+  <script src="js/setup.js"></script>
+</body>
+</html>
