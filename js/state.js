@@ -30,8 +30,23 @@ TM.state = {
   // ---- SHOW stav (Madrix-like A/B + crossfade) ----
   show: {
     crossfade: 0.0, // 0=A, 1=B
-    channelA: { presetId: null, color: {r:255,g:255,b:255}, shapes: [] },
-    channelB: { presetId: null, color: {r:255,g:255,b:255}, shapes: [] },
+
+    channelA: {
+      presetId: null,
+      color: {r:255,g:255,b:255},
+      shapes: [],
+      // LINE params (normalized)
+      line: { x:0, y:0, angle:0, thickness:0.08, length:1.0 }
+    },
+
+    channelB: {
+      presetId: null,
+      color: {r:255,g:255,b:255},
+      shapes: [],
+      // default B = 90°
+      line: { x:0, y:0, angle: Math.PI/2, thickness:0.08, length:1.0 }
+    },
+
     presets: [] // shared presets list
   }
 };
@@ -62,12 +77,6 @@ TM.loadProfile = function() {
     console.error("TM.loadProfile failed", e);
     return null;
   }
-};
-
-TM.state.show = {
-  activePreset: null,
-  activeShape: null,
-  outputTarget: 0 // 0=MASTER, 1=TL1, 2=TL2...
 };
 
 /* ===============================

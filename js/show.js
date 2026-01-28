@@ -1,35 +1,23 @@
 import { renderLineMask } from "./shapes/line.js";
 
-/* =========================================================
-   show.js
-   - boot pro SHOW (index.html)
-   - Madrix-like: Channel A / Channel B + Crossfade
-   ========================================================= */
-
 (function bootShow(){
-
-  document.addEventListener("click", (ev) => {
-  const el = ev.target.closest("[data-action='setup'], #btnSetup, #btnOpenSetup");
-  if (!el) return;
-
-  ev.preventDefault();
-  goToSetup();
-});
-
   // --- LiveView init ---
   const canvas = document.getElementById("liveView");
   const live = new TM.LiveView(canvas);
 
+  // --- DDP bridge WS ---
+TM.DDP.connect("ws://localhost:8787");
+
   function resizeLiveCanvas() {
     const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.max(1, Math.floor(rect.width));
+    canvas.width  = Math.max(1, Math.floor(rect.width));
     canvas.height = Math.max(1, Math.floor(rect.height));
     live.render();
   }
   window.addEventListener("resize", resizeLiveCanvas);
   resizeLiveCanvas();
 
-  // --- load mapping profile (from setup) ---
+  // --- Load profile from storage ---
   const savedProfile = TM.loadProfile();
   if (savedProfile) TM.state.profile = savedProfile;
 
@@ -46,124 +34,87 @@ import { renderLineMask } from "./shapes/line.js";
       ]
     };
   }
-
   live.setProfile(TM.state.profile);
 
-  // --- presets ---
-  TM.state.show.presets = TM.loadPresets();
-  if (TM.state.show.presets.length === 0) {
-    TM.state.show.presets.push({
-      id: TM.newPresetId(),
-      name: "Blank",
-      color: { r:255, g:255, b:255 },
-      shapes: []
-    });
-    TM.savePresets(TM.state.show.presets);
-  }
+  // --- Helpers ---
+  const degToRad = d => d * Math.PI / 180;
+  const clamp01 = v => Math.max(0, Math.min(1, v));
+  function hexToRgb(hex){
+  const h = (hex || "#ffffff").replace("#","").padEnd(6, "f");
+  const r = parseInt(h.slice(0,2), 16);
+  const g = parseInt(h.slice(2,4), 16);
+  const b = parseInt(h.slice(4,6), 16);
 
-  // --- UI ---
-  const selA = document.getElementById("presetSelectA");
-  const selB = document.getElementById("presetSelectB");
-  const btnLoadA = document.getElementById("btnLoadPresetA");
-  const btnLoadB = document.getElementById("btnLoadPresetB");
-  const btnSaveA = document.getElementById("btnSavePresetA");
-  const btnSaveB = document.getElementById("btnSavePresetB");
+  return {
+    r: Number.isNaN(r) ? 255 : r,
+    g: Number.isNaN(g) ? 255 : g,
+    b: Number.isNaN(b) ? 255 : b
+  };
+}
 
-  const colorA = document.getElementById("colorA");
-  const colorB = document.getElementById("colorB");
-
+  // --- UI: Crossfade ---
   const xfade = document.getElementById("xfade");
   const xfadeValue = document.getElementById("xfadeValue");
-
-  function rgbToHex(c){
-    const to2 = n => ("0"+Math.max(0,Math.min(255,n|0)).toString(16)).slice(-2);
-    return "#" + to2(c.r) + to2(c.g) + to2(c.b);
-  }
-  function hexToRgb(hex){
-    const h = (hex || "#ffffff").replace("#","");
-    const v = parseInt(h,16);
-    return { r:(v>>16)&255, g:(v>>8)&255, b:v&255 };
-  }
-
-  function rebuildPresetSelects(){
-    const presets = TM.state.show.presets;
-    function fill(sel){
-      if (!sel) return;
-      sel.innerHTML = "";
-      presets.forEach(p=>{
-        const o = document.createElement("option");
-        o.value = p.id;
-        o.textContent = p.name;
-        sel.appendChild(o);
-      });
-    }
-    fill(selA); fill(selB);
-
-    TM.state.show.channelA.presetId ||= presets[0].id;
-    TM.state.show.channelB.presetId ||= presets[Math.min(1,presets.length-1)].id;
-
-    if (selA) selA.value = TM.state.show.channelA.presetId;
-    if (selB) selB.value = TM.state.show.channelB.presetId;
-  }
-
-  function getPreset(id){
-    return TM.state.show.presets.find(p=>p.id===id) || null;
-  }
-
-  function loadPresetIntoChannel(key,id){
-    const p = getPreset(id);
-    if (!p) return;
-    const ch = key==="A" ? TM.state.show.channelA : TM.state.show.channelB;
-    ch.presetId = p.id;
-    ch.color = { ...p.color };
-    ch.shapes = JSON.parse(JSON.stringify(p.shapes||[]));
-    if (key==="A" && colorA) colorA.value = rgbToHex(ch.color);
-    if (key==="B" && colorB) colorB.value = rgbToHex(ch.color);
-    renderOutput();
-  }
-
-  function saveChannelAsPreset(key){
-    const ch = key==="A" ? TM.state.show.channelA : TM.state.show.channelB;
-    const name = prompt("Název presetu:", "New Preset");
-    if (!name) return;
-    TM.state.show.presets.push({
-      id: TM.newPresetId(),
-      name,
-      color:{...ch.color},
-      shapes: JSON.parse(JSON.stringify(ch.shapes||[]))
-    });
-    TM.savePresets(TM.state.show.presets);
-    rebuildPresetSelects();
-  }
-
-  if (btnLoadA) btnLoadA.onclick = ()=>loadPresetIntoChannel("A", selA.value);
-  if (btnLoadB) btnLoadB.onclick = ()=>loadPresetIntoChannel("B", selB.value);
-  if (btnSaveA) btnSaveA.onclick = ()=>saveChannelAsPreset("A");
-  if (btnSaveB) btnSaveB.onclick = ()=>saveChannelAsPreset("B");
-
-  if (colorA) colorA.oninput = ()=>{
-    TM.state.show.channelA.color = hexToRgb(colorA.value);
-    renderOutput();
-  };
-  if (colorB) colorB.oninput = ()=>{
-    TM.state.show.channelB.color = hexToRgb(colorB.value);
-    renderOutput();
-  };
-
   if (xfade) xfade.oninput = ()=>{
     const v = parseFloat(xfade.value);
-    TM.state.show.crossfade = (v+100)/200;
+    TM.state.show.crossfade = (v + 100) / 200;
     if (xfadeValue) xfadeValue.textContent = String(v);
     renderOutput();
   };
 
-  rebuildPresetSelects();
-  loadPresetIntoChannel("A", TM.state.show.channelA.presetId);
-  loadPresetIntoChannel("B", TM.state.show.channelB.presetId);
-  TM.state.show.crossfade = 0;
+
+
+function bindColorInput(id, channel){
+  const el = document.getElementById(id);
+  if (!el) {
+    console.warn("Missing color input:", id);
+    return;
+  }
+  const apply = () => {
+    channel.color = hexToRgb(el.value);
+    renderOutput();
+  };
+  el.addEventListener("input", apply);
+  apply(); // důležité: nastaví barvu hned při startu
+}
+
+bindColorInput("colorA", TM.state.show.channelA);
+bindColorInput("colorB", TM.state.show.channelB);
+
+  // --- UI: LINE params (A/B) ---
+  function bindLineUI(ch, angleId, thickId, lenId, labA, labT, labL){
+    const angleEl = document.getElementById(angleId);
+    const thickEl = document.getElementById(thickId);
+    const lenEl   = document.getElementById(lenId);
+
+    const lAngle = document.getElementById(labA);
+    const lThick = document.getElementById(labT);
+    const lLen   = document.getElementById(labL);
+
+    if (angleEl) angleEl.oninput = ()=>{
+      ch.line.angle = degToRad(+angleEl.value);
+      if (lAngle) lAngle.textContent = angleEl.value + "°";
+      renderOutput();
+    };
+
+    if (thickEl) thickEl.oninput = ()=>{
+      ch.line.thickness = clamp01((+thickEl.value)/100);
+      if (lThick) lThick.textContent = thickEl.value + "%";
+      renderOutput();
+    };
+
+    if (lenEl) lenEl.oninput = ()=>{
+      ch.line.length = clamp01((+lenEl.value)/100);
+      if (lLen) lLen.textContent = lenEl.value + "%";
+      renderOutput();
+    };
+  }
+
+  bindLineUI(TM.state.show.channelA, "aAngle", "aThick", "aLen", "aAngleLabel", "aThickLabel", "aLenLabel");
+  bindLineUI(TM.state.show.channelB, "bAngle", "bThick", "bLen", "bAngleLabel", "bThickLabel", "bLenLabel");
 
   // =========================
-  // OUTPUT PIPELINE (V1)
+  // OUTPUT PIPELINE
   // =========================
   function renderOutput(){
     const profile = TM.state.profile;
@@ -173,42 +124,87 @@ import { renderLineMask } from "./shapes/line.js";
     const W = d.N;
     const H = d.H || profile.height || 60;
 
-    const maskA = renderLineMask(W,H,{
-      angle:0,
-      thickness:0.08,
-      length:1.0
+    // ✅ Jediná “mix” proměnná, definovaná hned nahoře
+    const mix = clamp01(TM.state.show.crossfade || 0);
+
+    const LA = TM.state.show.channelA.line;
+    const LB = TM.state.show.channelB.line;
+
+    const maskA = renderLineMask(W, H, {
+      angle: LA.angle,
+      thickness: LA.thickness,
+      length: LA.length
     });
 
-    const maskB = renderLineMask(W,H,{
-      angle:Math.PI/2,
-      thickness:0.08,
-      length:1.0
+    const maskB = renderLineMask(W, H, {
+      angle: LB.angle,
+      thickness: LB.thickness,
+      length: LB.length
     });
 
-    const t = TM.state.show.crossfade;
-    const mask = new Float32Array(W*H);
-    for(let i=0;i<mask.length;i++){
-      mask[i] = maskA[i]*(1-t) + maskB[i]*t;
+    const out = new Float32Array(W * H);
+    for (let i = 0; i < out.length; i++) {
+      out[i] = maskA[i] * (1 - mix) + maskB[i] * mix;
     }
 
-    live.drawMask = mask;
+    // mix color A/B
+    const CA = TM.state.show.channelA.color || {r:255,g:255,b:255};
+    const CB = TM.state.show.channelB.color || {r:255,g:255,b:255};
+    const mixedColor = {
+      r: Math.round(CA.r * (1 - mix) + CB.r * mix),
+      g: Math.round(CA.g * (1 - mix) + CB.g * mix),
+      b: Math.round(CA.b * (1 - mix) + CB.b * mix)
+    };
+
+    live.drawMask = out;
+    live.drawColor = mixedColor; // liveview.js musí použít drawColor
     live.render();
+        // =========================
+    // SEND TO TL via DDP bridge (per device)
+    // =========================
+    if (TM.DDP && TM.DDP.connected && profile && profile.devices && profile.devices.length) {
+      const xMin = d.xMin;          // z derived (centered coords -> u index)
+      const Hpx = H;
+
+      for (const dev of profile.devices) {
+        const wCols = dev.w || 1;
+
+        // u0 = start column (0..W-1) v globálním frame
+        const u0 = (dev.x - xMin);
+
+        // ochrana proti out-of-range
+        if (u0 >= W || (u0 + wCols) <= 0) continue;
+
+        // pošleme RGB pro device jako pořadí:
+        // (sloupec 0..w-1) × (y 0..H-1) → RGBRGB...
+        const rgb = new Uint8Array(wCols * Hpx * 3);
+
+        // reverseX = otočí pořadí sloupců uvnitř zařízení
+        for (let cx = 0; cx < wCols; cx++) {
+          const srcCol = dev.reverseX ? (wCols - 1 - cx) : cx;
+          const u = u0 + srcCol;
+          if (u < 0 || u >= W) continue;
+
+          for (let y = 0; y < Hpx; y++) {
+            const yy = dev.flipY ? (Hpx - 1 - y) : y;
+
+            const v = out[yy * W + u]; // 0..1 maska
+            const r = Math.round(mixedColor.r * v);
+            const g = Math.round(mixedColor.g * v);
+            const b = Math.round(mixedColor.b * v);
+
+            const p = (cx * Hpx + y) * 3;
+            rgb[p + 0] = r;
+            rgb[p + 1] = g;
+            rgb[p + 2] = b;
+          }
+        }
+
+        TM.DDP.sendToDevice(dev.ip, rgb);
+      }
+    }
   }
 
   renderOutput();
-
-  // ===============================
-  // SHOW → SETUP
-  // ===============================
-  function stopShowHard(){
-    if (TM.state.show) TM.state.show.running = false;
-    if (TM.showRafId){ cancelAnimationFrame(TM.showRafId); TM.showRafId=null; }
-    if (TM.showIntervalId){ clearInterval(TM.showIntervalId); TM.showIntervalId=null; }
-  }
-
-  function goToSetup(){
-    stopShowHard();
-    window.location.href = "setup.html";
-  }
 
 })();

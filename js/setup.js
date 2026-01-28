@@ -29,7 +29,13 @@
   if (t) t.textContent = "ACTIVE: " + demoProfile.name + " (local demo)";
 }
 function ensureProfile() {
-  if (TM.state.profile) return;
+  // pokud profil už je, MUSÍME ho stejně poslat do LiveView
+  if (TM.state.profile) {
+    live.setProfile(TM.state.profile);
+    const t = document.getElementById("activeProfileText");
+    if (t) t.textContent = "ACTIVE: " + (TM.state.profile.name || "My Profile") + " (in memory)";
+    return;
+  }
 
   const saved = TM.loadProfile();
   TM.state.profile = saved || {

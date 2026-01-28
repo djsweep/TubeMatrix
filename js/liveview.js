@@ -3,6 +3,7 @@
    - kreslí Live Stage View na canvasu
    - NEGENERUJE SHAPES
    - pouze zobrazuje drawMask (pokud existuje)
+   - Setup: select + volitelný drag (když setup.js zapne isSetup + TM.state.ui.dragMode)
    ========================================================= */
 
 const LV = {
@@ -32,21 +33,37 @@ TM.getCanvasXY = function(canvas, ev) {
 TM.LiveView = function(canvas) {
   this.canvas = canvas;
   this.ctx = canvas.getContext("2d");
+
   this.profile = null;
   this.derived = null;
   this.deviceRects = [];
   this.drawMask = null;
 
+  // setup interakce (setup.js si nastaví)
   this.isSetup = false;
   this.dragging = false;
   this.dragDeviceId = null;
   this.dragStartX = 0;
   this.dragStartDeviceX = 0;
 
-  canvas.addEventListener("pointerdown", ev => this.onPointerDown(ev));
-  canvas.addEventListener("pointermove", ev => this.onPointerMove(ev));
-  canvas.addEventListener("pointerup", ev => this.onPointerUp(ev));
-  canvas.addEventListener("pointercancel", ev => this.onPointerUp(ev));
+  // === SAFE EVENT BINDING (bez závislosti na "this" v handleru) ===
+  const self = this;
+
+  canvas.addEventListener("pointerdown", function(ev) {
+    if (typeof self.onPointerDown === "function") self.onPointerDown(ev);
+  });
+
+  canvas.addEventListener("pointermove", function(ev) {
+    if (typeof self.onPointerMove === "function") self.onPointerMove(ev);
+  });
+
+  canvas.addEventListener("pointerup", function(ev) {
+    if (typeof self.onPointerUp === "function") self.onPointerUp(ev);
+  });
+
+  canvas.addEventListener("pointercancel", function(ev) {
+    if (typeof self.onPointerUp === "function") self.onPointerUp(ev);
+  });
 };
 
 TM.LiveView.prototype.setProfile = function(profile) {
@@ -90,7 +107,7 @@ TM.LiveView.prototype.draw = function() {
 
   if (!this.profile || !this.derived) return;
 
-  const { N, xMin, centerU } = this.derived;
+  const { N, centerU } = this.derived;
   const colStep = LV.tubeW + LV.tubeGap;
   const Hpx = this.derived.H || 60;
   const rowH = LV.tubeH / Hpx;
@@ -102,23 +119,24 @@ TM.LiveView.prototype.draw = function() {
     ctx.fillRect(x, LV.padY, LV.tubeW, LV.tubeH);
   }
 
-  // --- SHAPE MASK PREVIEW ---
-  if (this.drawMask) {
+  // --- SHAPE MASK PREVIEW (SHOW) ---
+  if (this.drawMask && this.drawMask.length >= N * Hpx) {
     for (let u = 0; u < N; u++) {
       const x = getPadX(this.canvas, this.derived) + u * colStep + 1;
       for (let y = 0; y < Hpx; y++) {
         const v = this.drawMask[y * N + u];
         if (v > 0) {
-          ctx.fillStyle = `rgba(255,255,255,${v})`;
+          const c = this.drawColor || { r:255, g:255, b:255 };
+          ctx.fillStyle = `rgba(${c.r},${c.g},${c.b},${v})`;
           ctx.fillRect(x, LV.padY + y * rowH, LV.tubeW - 2, rowH);
         }
       }
     }
   }
 
-  // --- device outlines ---
+  // --- device outlines + labels (SETUP) ---
   for (const r of this.deviceRects) {
-    const sel = TM.state.ui.selectedDeviceId === r.id;
+    const sel = (TM.state && TM.state.ui && TM.state.ui.selectedDeviceId === r.id);
     ctx.strokeStyle = sel ? "#4aa3ff" : "#2a2e3f";
     ctx.lineWidth = sel ? 2 : 1;
     ctx.strokeRect(r.left, r.top, r.right - r.left, r.bottom - r.top);
@@ -135,4 +153,65 @@ TM.LiveView.prototype.draw = function() {
   ctx.moveTo(cx, LV.padY - 22);
   ctx.lineTo(cx, LV.padY + LV.tubeH + 10);
   ctx.stroke();
+};
+
+// ============================
+// SETUP INTERACTION (SAFE)
+// ============================
+
+TM.LiveView.prototype.onPointerDown = function(ev) {
+  if (!this.profile || !this.derived) return;
+
+  const { x, y } = TM.getCanvasXY(this.canvas, ev);
+
+  // hit test zařízení
+  for (const r of this.deviceRects) {
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+      if (TM.state && TM.state.ui) TM.state.ui.selectedDeviceId = r.id;
+
+      // drag jen v setupu a když je dragMode zapnutý
+      const dragMode = !!(TM.state && TM.state.ui && TM.state.ui.dragMode);
+      if (this.isSetup && dragMode) {
+        this.dragging = true;
+        this.dragDeviceId = r.id;
+        this.dragStartX = x;
+
+        const dev = this.profile.devices.find(d => d.id === r.id);
+        this.dragStartDeviceX = dev ? dev.x : 0;
+
+        if (this.canvas.setPointerCapture) {
+          try { this.canvas.setPointerCapture(ev.pointerId); } catch (_) {}
+        }
+      }
+
+      this.draw();
+      return;
+    }
+  }
+};
+
+TM.LiveView.prototype.onPointerMove = function(ev) {
+  if (!this.dragging) return;
+  if (!this.profile || !this.derived) return;
+
+  const { x } = TM.getCanvasXY(this.canvas, ev);
+  const colStep = (LV.tubeW + LV.tubeGap);
+
+  const dxPx = x - this.dragStartX;
+  const dxCols = Math.round(dxPx / colStep);
+
+  const dev = this.profile.devices.find(d => d.id === this.dragDeviceId);
+  if (!dev) return;
+
+  dev.x = this.dragStartDeviceX + dxCols;
+
+  this.derived = TM.deriveFromProfile(this.profile);
+  this.rebuildHitRects();
+  this.draw();
+};
+
+TM.LiveView.prototype.onPointerUp = function(ev) {
+  if (!this.dragging) return;
+  this.dragging = false;
+  this.dragDeviceId = null;
 };
