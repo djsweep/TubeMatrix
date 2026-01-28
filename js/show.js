@@ -1,3 +1,4 @@
+import { renderLineMask } from "./shapes/line.js";
 /* =========================================================
    show.js
    - boot pro SHOW (index.html)
@@ -180,21 +181,43 @@
   // V0: ještě nemáme shapes engine, takže renderujeme jen "solid" barvu podle crossfade.
   // Později: frame = mask * color, mix(A,B,crossfade)
   function renderOutput(){
-    const a = TM.state.show.channelA.color;
-    const b = TM.state.show.channelB.color;
-    const t = TM.state.show.crossfade;
+  const profile = TM.state.profile;
+  if (!profile) return;
 
-    const mix = {
-      r: Math.round(a.r*(1-t) + b.r*t),
-      g: Math.round(a.g*(1-t) + b.g*t),
-      b: Math.round(a.b*(1-t) + b.b*t)
-    };
+  const derived = TM.deriveFromProfile(profile);
+  const W = derived.N;
+  const H = derived.H || profile.height || 60;
 
-    // LiveView: jen rychlý vizuální feedback - vyplníme canvas pozadí "mix" barvou
-    // (LiveView mapping overlay necháme; pokud chceš, přidáme později "mask preview")
-    live.setBackgroundColor(mix); // safe: added below if missing
-    live.render(); // safe: if method exists
+  // --- Channel A LINE (zatím natvrdo, UI přijde hned potom) ---
+  const maskA = renderLineMask(W, H, {
+    x: 0,
+    y: 0,
+    angle: 0,
+    thickness: 0.08,
+    length: 1.0
+  });
+
+  // --- Channel B LINE (pro test jiný úhel) ---
+  const maskB = renderLineMask(W, H, {
+    x: 0,
+    y: 0,
+    angle: Math.PI / 2,
+    thickness: 0.08,
+    length: 1.0
+  });
+
+  const t = TM.state.show.crossfade;
+
+  // --- smíchaná maska ---
+  const mask = new Float32Array(W * H);
+  for (let i = 0; i < mask.length; i++) {
+    mask[i] = maskA[i] * (1 - t) + maskB[i] * t;
   }
+
+  // --- PREVIEW DO LIVEVIEW ---
+  live.drawMask = mask;     // uložíme masku
+  live.draw();              // liveview si ji vezme
+}
 
   // Patch LiveView helpers if not present (non-breaking)
   if (typeof live.setBackgroundColor !== "function") {

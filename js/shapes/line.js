@@ -1,18 +1,36 @@
-export function renderLineMask(w, h, params) {
+// js/shapes/line.js
+// Robust LINE shape – univerzální pro malé i velké gridy
+// Vrací Float32Array masku 0..1
+
+export function renderLineMask(w, h, params = {}) {
   const {
-    x = 0,        // -0.5 .. +0.5 (střed = 0)
-    y = 0,        // -0.5 .. +0.5
-    angle = 0,    // radians
-    thickness = 0.1 // 0..1 (relativně k min(w,h))
+    x = 0,          // -0.5 .. +0.5 (střed = 0)
+    y = 0,          // -0.5 .. +0.5
+    angle = 0,      // radians
+    thickness = 0.08, // relativní (0..1)
+    length = 1.0,   // 0..1 (1 = přes celý grid)
+    softness = 1.0  // px – měkkost hrany
   } = params;
 
-  const cx = w * (0.5 + x);
-  const cy = h * (0.5 + y);
+  // --- střed v pixelech ---
+  const cx = (w - 1) * (0.5 + x);
+  const cy = (h - 1) * (0.5 + y);
 
   const cos = Math.cos(angle);
   const sin = Math.sin(angle);
 
-  const t = thickness * Math.min(w, h);
+  // --- tloušťka v px (MIN 1 px, jinak na malém gridu mizí) ---
+  const minDim = Math.min(w, h);
+  const halfThickness = Math.max(0.5, thickness * minDim * 0.5);
+
+  // --- délka úsečky ---
+  const halfLen = Math.max(
+    1,
+    length * Math.max(w, h) * 0.5
+  );
+
+  // --- soft edge v px ---
+  const soft = Math.max(0.0001, softness);
 
   const mask = new Float32Array(w * h);
 
@@ -21,15 +39,27 @@ export function renderLineMask(w, h, params) {
       const dx = i - cx;
       const dy = j - cy;
 
-      // rotace bodu do lokální osy čáry
+      // rotace do lokální osy čáry
       const rx =  dx * cos + dy * sin;
       const ry = -dx * sin + dy * cos;
 
-      const dist = Math.abs(ry);
-      const v = dist <= t ? 1 : 0;
+      // vzdálenost od osy
+      const d = Math.abs(ry);
 
-      mask[j * w + i] = v;
+      // --- tloušťka (soft falloff) ---
+      let v = 1.0 - (d - halfThickness) / soft;
+      if (v <= 0) continue;
+
+      // --- délka úsečky (soft okraje) ---
+      const adx = Math.abs(rx);
+      let lv = 1.0 - (adx - halfLen) / soft;
+      if (lv <= 0) continue;
+
+      // finální hodnota
+      const idx = j * w + i;
+      mask[idx] = Math.max(0, Math.min(1, v * lv));
     }
   }
+
   return mask;
 }

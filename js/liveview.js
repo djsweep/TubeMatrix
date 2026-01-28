@@ -28,6 +28,44 @@ function getPadX(canvas, derived) {
 
   return Math.floor((canvas.width - stagePxW) / 2);
 }
+
+function renderLineMask(w, h, params) {
+  const {
+    x = 0,
+    y = 0,
+    angle = Math.PI / 4,
+    thickness = 0.1
+  } = params;
+
+  const cx = w * (0.5 + x);
+  const cy = h * (0.5 + y);
+
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+
+  const t = thickness * Math.min(w, h);
+
+  const mask = new Float32Array(w * h);
+
+  for (let j = 0; j < h; j++) {
+    for (let i = 0; i < w; i++) {
+      const dx = i - cx;
+      const dy = j - cy;
+
+      const rx =  dx * cos + dy * sin;
+      const ry = -dx * sin + dy * cos;
+
+      const dist = Math.abs(ry);
+
+// délka úsečky (0..1 relativně k šířce)
+const halfLen = 0.35 * w;  // změň třeba na 0.45 pro delší
+
+const inside = (dist <= t) && (Math.abs(rx) <= halfLen);
+mask[j * w + i] = inside ? 1 : 0;
+  }
+  return mask;
+}
+}
 TM.getCanvasXY = function(canvas, ev) {
   const r = canvas.getBoundingClientRect();
   return {
@@ -161,6 +199,24 @@ TM.LiveView.prototype.draw = function() {
   const colStep = (LV.tubeW + LV.tubeGap);
   const rowH = LV.tubeH / (this.derived.H || 60);
 
+  // --- SHAPE MASK PREVIEW ---
+  if (this.drawMask) {
+    const W = this.derived.N;
+    const Hpx = this.derived.H || 60;
+    const rowH = LV.tubeH / Hpx;
+    const colStep = (LV.tubeW + LV.tubeGap);
+
+    for (let u = 0; u < W; u++) {
+      const x = getPadX(this.canvas, this.derived) + u * colStep + 1;
+      for (let y = 0; y < Hpx; y++) {
+        const v = this.drawMask[y * W + u];
+        if (v > 0) {
+          ctx.fillStyle = `rgba(255,255,255,${v})`;
+          ctx.fillRect(x, LV.padY + y * rowH, LV.tubeW - 2, rowH);
+        }
+      }
+    }
+  }
   // 2) device outlines + labels
   for (const r of this.deviceRects) {
     const isSel = (TM.state.ui.selectedDeviceId === r.id);
@@ -191,7 +247,33 @@ TM.LiveView.prototype.draw = function() {
       ctx.fillRect(x, y + yy * rowH, LV.tubeW, 1);
     }
   }
+  // === LINE SHAPE PREVIEW (TEMP) ===
+  const Wpx = this.derived.N;
+  const Hpx = this.derived.H || 60;
 
+  const lineMask = renderLineMask(Wpx, Hpx, {
+    x: 0,                 // střed
+    y: 0,
+    angle: 0,             // 0 = vodorovná
+    thickness: 0.05
+  });
+
+  for (let u = 0; u < Wpx; u++) {
+    const x = getPadX(this.canvas, this.derived) + u * colStep + 1;
+
+    for (let y = 0; y < Hpx; y++) {
+      const v = lineMask[y * Wpx + u];
+      if (v > 0) {
+        ctx.fillStyle = "rgba(255,255,255,0.9)";
+        ctx.fillRect(
+          x,
+          LV.padY + y * rowH,
+          LV.tubeW - 2,
+          rowH
+        );
+      }
+    }
+  }
 
 
 // 3b) VERIFY overlay (mapping check)
