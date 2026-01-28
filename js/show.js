@@ -1,4 +1,5 @@
 import { renderLineMask } from "./shapes/line.js";
+
 /* =========================================================
    show.js
    - boot pro SHOW (index.html)
@@ -6,30 +7,32 @@ import { renderLineMask } from "./shapes/line.js";
    ========================================================= */
 
 (function bootShow(){
-  // --- navigation ---
-  const btnSetup = document.getElementById("btnOpenSetup") || document.getElementById("btnSetup");
-  if (btnSetup) btnSetup.addEventListener("click", goToSetup);
+
+  document.addEventListener("click", (ev) => {
+  const el = ev.target.closest("[data-action='setup'], #btnSetup, #btnOpenSetup");
+  if (!el) return;
+
+  ev.preventDefault();
+  goToSetup();
+});
 
   // --- LiveView init ---
   const canvas = document.getElementById("liveView");
   const live = new TM.LiveView(canvas);
 
-  // Ensure canvas has proper internal resolution
   function resizeLiveCanvas() {
     const rect = canvas.getBoundingClientRect();
     canvas.width = Math.max(1, Math.floor(rect.width));
     canvas.height = Math.max(1, Math.floor(rect.height));
-    live.draw();
+    live.render();
   }
   window.addEventListener("resize", resizeLiveCanvas);
   resizeLiveCanvas();
-
 
   // --- load mapping profile (from setup) ---
   const savedProfile = TM.loadProfile();
   if (savedProfile) TM.state.profile = savedProfile;
 
-  // fallback demo if nothing exists
   if (!TM.state.profile) {
     TM.state.profile = {
       version: 1,
@@ -46,10 +49,8 @@ import { renderLineMask } from "./shapes/line.js";
 
   live.setProfile(TM.state.profile);
 
-  // --- presets (shared) ---
+  // --- presets ---
   TM.state.show.presets = TM.loadPresets();
-
-  // Ensure at least 1 preset exists (so UI isn't empty)
   if (TM.state.show.presets.length === 0) {
     TM.state.show.presets.push({
       id: TM.newPresetId(),
@@ -60,7 +61,7 @@ import { renderLineMask } from "./shapes/line.js";
     TM.savePresets(TM.state.show.presets);
   }
 
-  // --- UI elements ---
+  // --- UI ---
   const selA = document.getElementById("presetSelectA");
   const selB = document.getElementById("presetSelectB");
   const btnLoadA = document.getElementById("btnLoadPresetA");
@@ -73,8 +74,9 @@ import { renderLineMask } from "./shapes/line.js";
 
   const xfade = document.getElementById("xfade");
   const xfadeValue = document.getElementById("xfadeValue");
+
   function rgbToHex(c){
-    const to2 = (n)=>("0"+Math.max(0,Math.min(255,n|0)).toString(16)).slice(-2);
+    const to2 = n => ("0"+Math.max(0,Math.min(255,n|0)).toString(16)).slice(-2);
     return "#" + to2(c.r) + to2(c.g) + to2(c.b);
   }
   function hexToRgb(hex){
@@ -85,190 +87,128 @@ import { renderLineMask } from "./shapes/line.js";
 
   function rebuildPresetSelects(){
     const presets = TM.state.show.presets;
-
-    function fillSelect(sel){
+    function fill(sel){
       if (!sel) return;
       sel.innerHTML = "";
-      presets.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p.id;
-        opt.textContent = p.name;
-        sel.appendChild(opt);
+      presets.forEach(p=>{
+        const o = document.createElement("option");
+        o.value = p.id;
+        o.textContent = p.name;
+        sel.appendChild(o);
       });
     }
+    fill(selA); fill(selB);
 
-    fillSelect(selA);
-    fillSelect(selB);
+    TM.state.show.channelA.presetId ||= presets[0].id;
+    TM.state.show.channelB.presetId ||= presets[Math.min(1,presets.length-1)].id;
 
-    // keep current selection if possible
-    const aId = TM.state.show.channelA.presetId || presets[0].id;
-    const bId = TM.state.show.channelB.presetId || presets[Math.min(1,presets.length-1)].id;
-
-    if (selA) selA.value = aId;
-    if (selB) selB.value = bId;
-
-    TM.state.show.channelA.presetId = aId;
-    TM.state.show.channelB.presetId = bId;
+    if (selA) selA.value = TM.state.show.channelA.presetId;
+    if (selB) selB.value = TM.state.show.channelB.presetId;
   }
 
-  function getPresetById(id){
-    return TM.state.show.presets.find(p => p.id === id) || null;
+  function getPreset(id){
+    return TM.state.show.presets.find(p=>p.id===id) || null;
   }
 
-  function loadPresetIntoChannel(channelKey, presetId){
-    const p = getPresetById(presetId);
+  function loadPresetIntoChannel(key,id){
+    const p = getPreset(id);
     if (!p) return;
-
-    const ch = (channelKey === "A") ? TM.state.show.channelA : TM.state.show.channelB;
+    const ch = key==="A" ? TM.state.show.channelA : TM.state.show.channelB;
     ch.presetId = p.id;
     ch.color = { ...p.color };
-    ch.shapes = JSON.parse(JSON.stringify(p.shapes || []));
-
-    if (channelKey === "A" && colorA) colorA.value = rgbToHex(ch.color);
-    if (channelKey === "B" && colorB) colorB.value = rgbToHex(ch.color);
-
-    renderOutput(); // preview/output refresh
+    ch.shapes = JSON.parse(JSON.stringify(p.shapes||[]));
+    if (key==="A" && colorA) colorA.value = rgbToHex(ch.color);
+    if (key==="B" && colorB) colorB.value = rgbToHex(ch.color);
+    renderOutput();
   }
 
-  function saveChannelAsPreset(channelKey){
-    const ch = (channelKey === "A") ? TM.state.show.channelA : TM.state.show.channelB;
-
+  function saveChannelAsPreset(key){
+    const ch = key==="A" ? TM.state.show.channelA : TM.state.show.channelB;
     const name = prompt("Název presetu:", "New Preset");
     if (!name) return;
-
-    const preset = {
+    TM.state.show.presets.push({
       id: TM.newPresetId(),
       name,
-      color: { ...ch.color },
-      shapes: JSON.parse(JSON.stringify(ch.shapes || []))
-    };
-
-    TM.state.show.presets.push(preset);
+      color:{...ch.color},
+      shapes: JSON.parse(JSON.stringify(ch.shapes||[]))
+    });
     TM.savePresets(TM.state.show.presets);
     rebuildPresetSelects();
   }
 
-  // Hook UI events
-  if (btnLoadA) btnLoadA.addEventListener("click", () => loadPresetIntoChannel("A", selA.value));
-  if (btnLoadB) btnLoadB.addEventListener("click", () => loadPresetIntoChannel("B", selB.value));
-  if (btnSaveA) btnSaveA.addEventListener("click", () => saveChannelAsPreset("A"));
-  if (btnSaveB) btnSaveB.addEventListener("click", () => saveChannelAsPreset("B"));
+  if (btnLoadA) btnLoadA.onclick = ()=>loadPresetIntoChannel("A", selA.value);
+  if (btnLoadB) btnLoadB.onclick = ()=>loadPresetIntoChannel("B", selB.value);
+  if (btnSaveA) btnSaveA.onclick = ()=>saveChannelAsPreset("A");
+  if (btnSaveB) btnSaveB.onclick = ()=>saveChannelAsPreset("B");
 
-  if (colorA) colorA.addEventListener("input", () => {
+  if (colorA) colorA.oninput = ()=>{
     TM.state.show.channelA.color = hexToRgb(colorA.value);
     renderOutput();
-  });
-  if (colorB) colorB.addEventListener("input", () => {
+  };
+  if (colorB) colorB.oninput = ()=>{
     TM.state.show.channelB.color = hexToRgb(colorB.value);
     renderOutput();
-  });
+  };
 
-  if (xfade) xfade.addEventListener("input", () => {
+  if (xfade) xfade.oninput = ()=>{
     const v = parseFloat(xfade.value);
-    TM.state.show.crossfade = (v + 100) / 200; // 0..1
+    TM.state.show.crossfade = (v+100)/200;
     if (xfadeValue) xfadeValue.textContent = String(v);
-  });
+    renderOutput();
+  };
 
-// --- initial UI state ---
   rebuildPresetSelects();
-  // load initial preset into both channels
   loadPresetIntoChannel("A", TM.state.show.channelA.presetId);
   loadPresetIntoChannel("B", TM.state.show.channelB.presetId);
+  TM.state.show.crossfade = 0;
 
-  if (xfade) xfade.value = "0";
-  TM.state.show.crossfade = 0.0;
-  if (xfadeLabel) // --- Output rendering (V0) ---
-  // V0: ještě nemáme shapes engine, takže renderujeme jen "solid" barvu podle crossfade.
-  // Později: frame = mask * color, mix(A,B,crossfade)
+  // =========================
+  // OUTPUT PIPELINE (V1)
+  // =========================
   function renderOutput(){
-  const profile = TM.state.profile;
-  if (!profile) return;
+    const profile = TM.state.profile;
+    if (!profile) return;
 
-  const derived = TM.deriveFromProfile(profile);
-  const W = derived.N;
-  const H = derived.H || profile.height || 60;
+    const d = TM.deriveFromProfile(profile);
+    const W = d.N;
+    const H = d.H || profile.height || 60;
 
-  // --- Channel A LINE (zatím natvrdo, UI přijde hned potom) ---
-  const maskA = renderLineMask(W, H, {
-    x: 0,
-    y: 0,
-    angle: 0,
-    thickness: 0.08,
-    length: 1.0
-  });
+    const maskA = renderLineMask(W,H,{
+      angle:0,
+      thickness:0.08,
+      length:1.0
+    });
 
-  // --- Channel B LINE (pro test jiný úhel) ---
-  const maskB = renderLineMask(W, H, {
-    x: 0,
-    y: 0,
-    angle: Math.PI / 2,
-    thickness: 0.08,
-    length: 1.0
-  });
+    const maskB = renderLineMask(W,H,{
+      angle:Math.PI/2,
+      thickness:0.08,
+      length:1.0
+    });
 
-  const t = TM.state.show.crossfade;
+    const t = TM.state.show.crossfade;
+    const mask = new Float32Array(W*H);
+    for(let i=0;i<mask.length;i++){
+      mask[i] = maskA[i]*(1-t) + maskB[i]*t;
+    }
 
-  // --- smíchaná maska ---
-  const mask = new Float32Array(W * H);
-  for (let i = 0; i < mask.length; i++) {
-    mask[i] = maskA[i] * (1 - t) + maskB[i] * t;
-  }
-
-  // --- PREVIEW DO LIVEVIEW ---
-  live.drawMask = mask;     // uložíme masku
-  live.draw();              // liveview si ji vezme
-}
-
-  // Patch LiveView helpers if not present (non-breaking)
-  if (typeof live.setBackgroundColor !== "function") {
-    live.setBackgroundColor = function(rgb){
-      this._bg = rgb;
-    };
-  }
-  if (typeof live.render !== "function") {
-    live.render = function(){
-      const ctx = this.ctx;
-      const w = this.canvas.width = this.canvas.clientWidth;
-      const h = this.canvas.height = this.canvas.clientHeight;
-      const bg = this._bg || {r:0,g:0,b:0};
-      ctx.fillStyle = `rgb(${bg.r},${bg.g},${bg.b})`;
-      ctx.fillRect(0,0,w,h);
-      // draw mapping overlay if method exists
-      if (typeof this.draw === "function") this.draw();
-      else if (typeof this.drawOverlay === "function") this.drawOverlay();
-    };
+    live.drawMask = mask;
+    live.render();
   }
 
   renderOutput();
 
   // ===============================
-// SHOW → SETUP (single window)
-// ===============================
-
-function stopShowHard() {
-  // zastaví běh show (bezpečně)
-  if (window.TM && TM.state && TM.state.show) {
-    TM.state.show.running = false;
+  // SHOW → SETUP
+  // ===============================
+  function stopShowHard(){
+    if (TM.state.show) TM.state.show.running = false;
+    if (TM.showRafId){ cancelAnimationFrame(TM.showRafId); TM.showRafId=null; }
+    if (TM.showIntervalId){ clearInterval(TM.showIntervalId); TM.showIntervalId=null; }
   }
 
-  // zruší requestAnimationFrame, pokud existuje
-  if (window.TM && TM.showRafId) {
-    cancelAnimationFrame(TM.showRafId);
-    TM.showRafId = null;
+  function goToSetup(){
+    stopShowHard();
+    window.location.href = "setup.html";
   }
-
-  // zruší intervaly, pokud existují
-  if (window.TM && TM.showIntervalId) {
-    clearInterval(TM.showIntervalId);
-    TM.showIntervalId = null;
-  }
-
-  // tady zatím NIC víc – jen stop
-}
-
-function goToSetup() {
-  stopShowHard();
-  window.location.href = "setup.html";
-}
 
 })();
