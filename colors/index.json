@@ -1,0 +1,9 @@
+{
+  "palettes": [
+    { "id": "mono_white", "name": "Mono White", "file": "mono_white.json" },
+    { "id": "soft_pastel", "name": "Soft Pastel", "file": "soft_pastel.json" },
+    { "id": "warm", "name": "Warm", "file": "warm.json" },
+    { "id": "cold", "name": "Cold", "file": "cold.json" },
+    { "id": "saturated", "name": "Saturated", "file": "saturated.json" }
+  ]
+}

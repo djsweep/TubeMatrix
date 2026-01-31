@@ -13,7 +13,9 @@
     <div class="logo">TubeMatrix</div>
 
     <div class="top-actions">
+      <button onclick="location.href='fx.html'">FX</button>
       <button onclick="location.href='setup.html'">SETUP</button>
+      
     </div>
 
     <div class="status">
@@ -164,6 +166,7 @@
         <span class="xfade-label">B</span>
         <span id="xfadeValue" class="muted">0</span>
       </div>
+      
       <div id="colorModeBar" class="module" style="margin-top:10px;">
   <div class="row" style="justify-content:center; gap:10px;">
     <span class="muted">Color mode</span>
@@ -171,7 +174,21 @@
       <option value="solid">Solid</option>
       <option value="gradY">Gradient Y (top→bottom)</option>
       <option value="gradX">Gradient X (left→right)</option>
+      <option value="palette">Palette (from /colors)</option>
     </select>
+  </div>
+</div>
+
+<div id="paletteBar" class="module" style="margin-top:10px;">
+  <div class="row" style="justify-content:center; gap:10px;">
+    <span class="muted">Palette</span>
+    <select id="paletteSelect"></select>
+  </div>
+
+  <div class="row" style="justify-content:center; gap:10px; margin-top:6px;">
+    <span class="muted">Palette speed</span>
+    <input id="paletteSpeed" type="range" min="0" max="100" step="1" value="15" style="max-width:220px;">
+    <span id="paletteSpeedLabel" class="muted">15</span>
   </div>
 </div>
     </div>

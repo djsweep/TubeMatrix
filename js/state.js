@@ -51,6 +51,14 @@ TM.state = {
       rect: { x:0, y:0, width:60, height:60, angle:0, fill:100, thickness:8 },
     },
 
+        palette: {
+      enabled: false,         // zapne se, když zvolíš colorMode=palette
+      list: [],               // seznam z colors/index.json
+      activeId: null,         // id palety (např. "soft_pastel")
+      active: null,           // samotná načtená paleta (JSON)
+      speed: 0.15             // rychlost změny barev
+    },
+
     presets: [] // shared presets list
   }
 };

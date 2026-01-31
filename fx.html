@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>TubeMatrix – FX Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- stejné styly jako Live -->
+  <link rel="stylesheet" href="./css/app.css" />
+
+  <style>
+    /* drobná odlišnost od Live */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid #333;
+      background: #111;
+    }
+    .topbar h1 {
+      font-size: 16px;
+      margin: 0;
+      font-weight: 600;
+    }
+    .topbar a {
+      color: #9ad;
+      text-decoration: none;
+      font-size: 13px;
+    }
+    .hint {
+      font-size: 11px;
+      opacity: 0.6;
+      margin-top: 6px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <h1>FX Generator (MVP)</h1>
+  <a href="./index.html">← Back to Live</a>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div id="main">
+
+  <!-- LEFT PANEL – SHAPE -->
+  <div id="panel-left" class="panel">
+    <h3>Shape</h3>
+
+    <div class="module">
+      <div class="row">
+        <span class="muted">Type</span>
+        <select id="fxShapeType">
+          <option value="line">Line</option>
+          <option value="rect">Rect</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="row">
+        <span class="muted">Length / Width</span>
+        <input type="range" min="0" max="100" value="80" />
+      </div>
+      <div class="row">
+        <span class="muted">Thickness / Height</span>
+        <input type="range" min="0" max="100" value="12" />
+      </div>
+      <div class="row">
+        <span class="muted">Rotation</span>
+        <input type="range" min="0" max="360" value="0" />
+      </div>
+      <div class="row">
+        <span class="muted">Count</span>
+        <input type="range" min="1" max="10" value="1" />
+      </div>
+      <div class="row">
+        <label>
+          <input type="checkbox" checked />
+          <span class="muted">Fill</span>
+        </label>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CENTER – PREVIEW -->
+  <div id="center">
+    <h3 style="text-align:center;">Preview</h3>
+
+    <!-- stejný canvas jako Live (jen náhled) -->
+    <canvas id="fxPreview" width="400" height="200"
+            style="background:#000; width:100%; max-width:640px; display:block; margin:10px auto;">
+    </canvas>
+
+    <div class="hint">
+      Preview je jen náhled masky + pohybu<br>
+      Barvy řeší až Live (paleta / solid)
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL – MOTION -->
+  <div id="panel-right" class="panel">
+    <h3>Motion</h3>
+
+    <div class="module">
+      <div class="row">
+        <span class="muted">Type</span>
+        <select id="fxMotionType">
+          <option value="static">Static</option>
+          <option value="moveX">Move X</option>
+          <option value="moveY">Move Y</option>
+          <option value="rotate">Rotate</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="module">
+      <div class="row">
+        <span class="muted">Speed</span>
+        <input type="range" min="0" max="100" value="25" />
+      </div>
+    </div>
+
+    <div class="module">
+      <button style="width:100%;">SAVE FX</button>
+      <button style="width:100%; margin-top:6px;">LOAD FX</button>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ZATÍM BEZ LOGIKY – jen kostra -->
+<script>
+  // TODO:
+  // - propojit slidery do FX objektu
+  // - render masky do canvasu
+  // - SAVE -> JSON do /fx/
+  // - LOAD -> JSON ze /fx/
+</script>
+
+</body>
+</html>

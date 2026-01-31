@@ -22,6 +22,33 @@ import { renderRectMask } from "./shapes/rect.js";
     };
   }
 
+    function getPaletteColor(palette, t, speedOverride) {
+    if (!palette || !Array.isArray(palette.colors) || palette.colors.length === 0) {
+      return { r: 255, g: 255, b: 255 };
+    }
+
+    // 1 barva = pořád stejná
+    if (palette.colors.length === 1) return hexToRgb(palette.colors[0]);
+
+    // rychlost: buď override, nebo z palety, nebo default
+    const speed = (typeof speedOverride === "number" ? speedOverride : (palette.speed ?? 0.15));
+
+    // t=sekundy → posun v paletě
+    const x = t * speed;
+    const i = Math.floor(x) % palette.colors.length;
+    const j = (i + 1) % palette.colors.length;
+    const f = x - Math.floor(x); // 0..1
+
+    const c1 = hexToRgb(palette.colors[i]);
+    const c2 = hexToRgb(palette.colors[j]);
+
+    return {
+      r: Math.round(c1.r + (c2.r - c1.r) * f),
+      g: Math.round(c1.g + (c2.g - c1.g) * f),
+      b: Math.round(c1.b + (c2.b - c1.b) * f),
+    };
+  }
+
   function resizeLiveCanvas() {
     const rect = canvas.getBoundingClientRect();
     canvas.width = Math.max(1, Math.floor(rect.width));
@@ -259,6 +286,83 @@ function ensureChannelDefaults(ch) {
     });
   }
 
+    // ==========================================
+  // PALETTES (from /colors)
+  // ==========================================
+  const paletteSelect = document.getElementById("paletteSelect");
+  const paletteSpeed = document.getElementById("paletteSpeed");
+  const paletteSpeedLabel = document.getElementById("paletteSpeedLabel");
+
+  async function loadPaletteIndex() {
+    try {
+      const res = await fetch("./colors/index.json");
+      const data = await res.json();
+      const list = (data && Array.isArray(data.palettes)) ? data.palettes : [];
+      TM.state.show.palette.list = list;
+
+      // naplnit dropdown
+      if (paletteSelect) {
+        paletteSelect.innerHTML = "";
+        for (const p of list) {
+          const opt = document.createElement("option");
+          opt.value = p.id;
+          opt.textContent = p.name || p.id;
+          paletteSelect.appendChild(opt);
+        }
+      }
+
+      // default: první paleta
+      if (!TM.state.show.palette.activeId && list.length) {
+        TM.state.show.palette.activeId = list[0].id;
+      }
+
+      if (paletteSelect && TM.state.show.palette.activeId) {
+        paletteSelect.value = TM.state.show.palette.activeId;
+      }
+
+      await loadActivePalette();
+      renderOutput();
+    } catch (e) {
+      console.warn("Palette index load failed:", e);
+    }
+  }
+
+  async function loadActivePalette() {
+    const list = TM.state.show.palette.list || [];
+    const id = TM.state.show.palette.activeId;
+    const item = list.find(x => x.id === id);
+    if (!item) return;
+
+    try {
+      const res = await fetch("./colors/" + item.file);
+      TM.state.show.palette.active = await res.json();
+    } catch (e) {
+      console.warn("Palette load failed:", e);
+    }
+  }
+
+  if (paletteSpeed && paletteSpeedLabel) {
+    const applySpeed = () => {
+      const v = +paletteSpeed.value;          // 0..100
+      paletteSpeedLabel.textContent = String(v);
+      TM.state.show.palette.speed = v / 100;  // 0..1
+      renderOutput();
+    };
+    paletteSpeed.addEventListener("input", applySpeed);
+    applySpeed();
+  }
+
+  if (paletteSelect) {
+    paletteSelect.addEventListener("change", async () => {
+      TM.state.show.palette.activeId = paletteSelect.value;
+      await loadActivePalette();
+      renderOutput();
+    });
+  }
+
+  // načíst seznam hned po startu
+  loadPaletteIndex();
+
   // LINE UI (degrees in UI, radians in render)
   bindLineUI(
     TM.state.show.channelA,
@@ -337,13 +441,25 @@ function ensureChannelDefaults(ch) {
       outMask[i] = maskA[i] * (1 - mix) + maskB[i] * mix;
     }
 
-    const CA = TM.state.show.channelA.color || { r: 255, g: 255, b: 255 };
-    const CB = TM.state.show.channelB.color || { r: 255, g: 255, b: 255 };
-    const mixedColor = {
-      r: Math.round(CA.r * (1 - mix) + CB.r * mix),
-      g: Math.round(CA.g * (1 - mix) + CB.g * mix),
-      b: Math.round(CA.b * (1 - mix) + CB.b * mix),
-    };
+    // ---- COLOR SOURCE ----
+const colorMode = TM.state.show.colorMode || "solid";
+
+let mixedColor;
+if (colorMode === "palette") {
+  const t = performance.now() / 1000;
+  const pal = TM.state.show.palette.active;
+  const spd = TM.state.show.palette.speed ?? 0.15;
+  mixedColor = getPaletteColor(pal, t, spd);
+} else {
+  // původní chování: mix barev z A/B
+  const CA = TM.state.show.channelA.color || { r: 255, g: 255, b: 255 };
+  const CB = TM.state.show.channelB.color || { r: 255, g: 255, b: 255 };
+  mixedColor = {
+    r: Math.round(CA.r * (1 - mix) + CB.r * mix),
+    g: Math.round(CA.g * (1 - mix) + CB.g * mix),
+    b: Math.round(CA.b * (1 - mix) + CB.b * mix),
+  };
+}
 
     const frameRGB = new Uint8Array(W * H * 3);
     for (let i = 0; i < W * H; i++) {

@@ -396,3 +396,24 @@ button.is-active {
   outline: 2px solid rgba(255,255,255,0.6);
   box-shadow: 0 0 0 2px rgba(255,255,255,0.12) inset;
 }
+
+/* Force 3-column layout (A | Live | B) */
+#main {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;   /* kdyz je to uzke, muzes scrollovat do strany */
+}
+
+/* Left & right panels fixed width */
+#panel-left,
+#panel-right {
+  display: block !important;
+  flex: 0 0 320px;    /* pevna sirka panelu */
+  min-width: 280px;
+}
+
+/* Center takes remaining space */
+#center {
+  flex: 1 1 auto;
+  min-width: 360px;
+}
