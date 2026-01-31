@@ -1,0 +1,6 @@
+{
+  "name": "Warm",
+  "colors": ["#FFB347", "#FFCC80", "#FFE0B2"],
+  "transition": "smooth",
+  "speed": 0.12
+}

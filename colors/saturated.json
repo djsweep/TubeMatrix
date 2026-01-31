@@ -1,0 +1,6 @@
+{
+  "name": "Saturated",
+  "colors": ["#FF005D", "#00E5FF", "#B400FF"],
+  "transition": "soft",
+  "speed": 0.25
+}

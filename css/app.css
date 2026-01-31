@@ -391,3 +391,8 @@ body.tm-show #liveView {
   height: 100%;      /* ← KRITICKÉ */
   display: block;
 }
+
+button.is-active {
+  outline: 2px solid rgba(255,255,255,0.6);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.12) inset;
+}

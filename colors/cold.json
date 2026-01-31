@@ -1,0 +1,6 @@
+{
+  "name": "Cold",
+  "colors": ["#5DADE2", "#AED6F1", "#85C1E9"],
+  "transition": "soft",
+  "speed": 0.15
+}

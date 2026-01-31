@@ -1,7 +1,7 @@
 import { renderLineMask } from "./shapes/line.js";
 import { renderRectMask } from "./shapes/rect.js";
 
-(function bootShow() {
+window.addEventListener("DOMContentLoaded", () => {
   // ---------- DOM ----------
   const canvas = document.getElementById("liveView");
   const live = new TM.LiveView(canvas);
@@ -76,31 +76,6 @@ import { renderRectMask } from "./shapes/rect.js";
     el.addEventListener("input", apply);
     apply();
   }
-
-function ensureChannelDefaults(ch) {
-  if (!ch.line) {
-    ch.line = {
-      angleDeg: 0,
-      thickness: 0.08,
-      length: 1.0,
-      x: 0,
-      y: 0
-    };
-  }
-
-  if (!ch.rect) {
-    ch.rect = {
-      angle: 0,
-      width: 60,
-      height: 60,
-      fill: 100,
-      x: 0,
-      y: 0
-    };
-  }
-
-  if (!ch.activeShape) ch.activeShape = "line";
-}
 
   function bindLineUI(ch, angleId, thickId, lenId, offXId, offYId, labA, labT, labL, labX, labY) {
     const angleEl = document.getElementById(angleId);
@@ -242,8 +217,6 @@ function ensureChannelDefaults(ch) {
   bindColorInput("colorA", TM.state.show.channelA);
   bindColorInput("colorB", TM.state.show.channelB);
 
-  ensureChannelDefaults(TM.state.show.channelA);
-  ensureChannelDefaults(TM.state.show.channelB);
   // Shape buttons (also toggles panels)
   bindShapeButtons("A", TM.state.show.channelA);
   bindShapeButtons("B", TM.state.show.channelB);
@@ -393,4 +366,4 @@ function ensureChannelDefaults(ch) {
   }
 
   renderOutput();
-})();
+});

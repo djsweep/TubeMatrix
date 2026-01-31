@@ -50,38 +50,103 @@
         </div>
       </div>
 
-      <!-- LINE (A) -->
-      <div class="module">
-        <h4>Line</h4>
+      <!-- SHAPE UI (A) -->
+<div id="shape-ui-a">
 
-        <div class="row" style="justify-content:space-between;">
-          <span class="muted">Angle</span>
-          <span id="aAngleLabel" class="muted">0°</span>
-        </div>
-        <input id="aAngle" type="range" min="-180" max="180" step="1" value="0" />
+  <!-- LINE (A) -->
+  <div id="ui-line-a">
+    <div class="module">
+      <h4>Line</h4>
 
-        <div class="row" style="justify-content:space-between; margin-top:10px;">
-          <span class="muted">Thickness</span>
-          <span id="aThickLabel" class="muted">8%</span>
-        </div>
-        <input id="aThick" type="range" min="1" max="50" step="1" value="8" />
-
-        <div class="row" style="justify-content:space-between; margin-top:10px;">
-          <span class="muted">Length</span>
-          <span id="aLenLabel" class="muted">100%</span>
-        </div>
-        <input id="aLen" type="range" min="1" max="100" step="1" value="100" />
+      <div class="row" style="justify-content:space-between;">
+        <span class="muted">Angle</span>
+        <span id="aAngleLabel" class="muted">0°</span>
       </div>
+      <input id="aAngle" type="range" min="-180" max="180" step="1" value="0" />
+
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <span class="muted">Thickness</span>
+        <span id="aThickLabel" class="muted">8%</span>
+      </div>
+      <input id="aThick" type="range" min="1" max="50" step="1" value="8" />
+
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <span class="muted">Length</span>
+        <span id="aLenLabel" class="muted">100%</span>
+      </div>
+      <input id="aLen" type="range" min="1" max="100" step="1" value="100" />
+
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <span class="muted">Offset X</span>
+        <span id="aOffXLabel" class="muted">0</span>
+      </div>
+      <input id="aOffX" type="range" min="-100" max="100" step="1" value="0" />
+
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <span class="muted">Offset Y</span>
+        <span id="aOffYLabel" class="muted">0</span>
+      </div>
+      <input id="aOffY" type="range" min="-100" max="100" step="1" value="0" />
+    </div>
+  </div>
+
+  <!-- RECT (A) -->
+  <div id="ui-rect-a" style="display:none;">
+  <div class="module">
+    <h4>Rect</h4>
+
+    <div class="row" style="justify-content:space-between;">
+      <span class="muted">Angle</span>
+      <span id="aRectAngleLabel" class="muted">0°</span>
+    </div>
+    <input id="aRectAngle" type="range" min="-180" max="180" step="1" value="0" />
+
+    <div class="row" style="justify-content:space-between; margin-top:10px;">
+      <span class="muted">Width</span>
+      <span id="aRectWLabel" class="muted">60%</span>
+    </div>
+    <input id="aRectW" type="range" min="5" max="100" step="1" value="60" />
+
+    <div class="row" style="justify-content:space-between; margin-top:10px;">
+      <span class="muted">Height</span>
+      <span id="aRectHLabel" class="muted">60%</span>
+    </div>
+    <input id="aRectH" type="range" min="5" max="100" step="1" value="60" />
+
+    <div class="row" style="justify-content:space-between; margin-top:10px;">
+      <span class="muted">Fill</span>
+      <span id="aRectFillLabel" class="muted">100%</span>
+    </div>
+    <input id="aRectFill" type="range" min="0" max="100" step="1" value="100" />
+  </div>
+</div>
+  <!-- CIRCLE (A) -->
+  <div id="ui-circle-a" style="display:none;">
+    <div class="module">
+      <h4>Circle</h4>
+      <div class="muted">Coming soon.</div>
+    </div>
+  </div>
+
+  <!-- WAVE (A) -->
+  <div id="ui-wave-a" style="display:none;">
+    <div class="module">
+      <h4>Wave</h4>
+      <div class="muted">Coming soon.</div>
+    </div>
+  </div>
+
+</div>
 
       <div class="module">
         <h4>Shapes</h4>
         <div class="row">
-          <button type="button" disabled>+ Circle</button>
-          <button type="button" disabled>+ Rect</button>
+          <button id="btnAShapeCircle" type="button">Circle</button>
+          <button id="btnAShapeRect" type="button">Rect</button>
         </div>
         <div class="row">
-          <button type="button" disabled>+ Line</button>
-          <button type="button" disabled>+ Wave</button>
+          <button id="btnAShapeLine" type="button">Line</button>
+          <button id="btnAShapeWave" type="button">Wave</button>
         </div>
         <div class="muted">V1: zatím jen struktura (přidáme po routingu).</div>
       </div>
@@ -99,8 +164,17 @@
         <span class="xfade-label">B</span>
         <span id="xfadeValue" class="muted">0</span>
       </div>
+      <div id="colorModeBar" class="module" style="margin-top:10px;">
+  <div class="row" style="justify-content:center; gap:10px;">
+    <span class="muted">Color mode</span>
+    <select id="colorMode">
+      <option value="solid">Solid</option>
+      <option value="gradY">Gradient Y (top→bottom)</option>
+      <option value="gradX">Gradient X (left→right)</option>
+    </select>
+  </div>
+</div>
     </div>
-
     <!-- RIGHT / CHANNEL B -->
     <div id="panel-right" class="panel">
       <div class="panel-head">
@@ -126,38 +200,102 @@
         </div>
       </div>
 
-      <!-- LINE (B) -->
-      <div class="module">
-        <h4>Line</h4>
+      <!-- SHAPE UI (B) -->
+<div id="shape-ui-b">
 
-        <div class="row" style="justify-content:space-between;">
-          <span class="muted">Angle</span>
-          <span id="bAngleLabel" class="muted">90°</span>
-        </div>
-        <input id="bAngle" type="range" min="-180" max="180" step="1" value="90" />
+  <!-- LINE (B) -->
+  <div id="ui-line-b">
+    <div class="module">
+      <h4>Line</h4>
 
-        <div class="row" style="justify-content:space-between; margin-top:10px;">
-          <span class="muted">Thickness</span>
-          <span id="bThickLabel" class="muted">8%</span>
-        </div>
-        <input id="bThick" type="range" min="1" max="50" step="1" value="8" />
-
-        <div class="row" style="justify-content:space-between; margin-top:10px;">
-          <span class="muted">Length</span>
-          <span id="bLenLabel" class="muted">100%</span>
-        </div>
-        <input id="bLen" type="range" min="1" max="100" step="1" value="100" />
+      <div class="row" style="justify-content:space-between;">
+        <span class="muted">Angle</span>
+        <span id="bAngleLabel" class="muted">90°</span>
       </div>
+      <input id="bAngle" type="range" min="-180" max="180" step="1" value="90" />
 
-      <div class="module">
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <span class="muted">Thickness</span>
+        <span id="bThickLabel" class="muted">8%</span>
+      </div>
+      <input id="bThick" type="range" min="1" max="50" step="1" value="8" />
+
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <span class="muted">Length</span>
+        <span id="bLenLabel" class="muted">100%</span>
+      </div>
+      <input id="bLen" type="range" min="1" max="100" step="1" value="100" />
+
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <span class="muted">Offset X</span>
+        <span id="bOffXLabel" class="muted">0</span>
+      </div>
+      <input id="bOffX" type="range" min="-100" max="100" step="1" value="0" />
+
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <span class="muted">Offset Y</span>
+        <span id="bOffYLabel" class="muted">0</span>
+      </div>
+      <input id="bOffY" type="range" min="-100" max="100" step="1" value="0" />
+    </div>
+  </div>
+
+  <!-- RECT (B) -->
+  <div id="ui-rect-b" style="display:none;">
+  <div class="module">
+    <h4>Rect</h4>
+
+    <div class="row" style="justify-content:space-between;">
+      <span class="muted">Angle</span>
+      <span id="bRectAngleLabel" class="muted">0°</span>
+    </div>
+    <input id="bRectAngle" type="range" min="-180" max="180" step="1" value="0" />
+
+    <div class="row" style="justify-content:space-between; margin-top:10px;">
+      <span class="muted">Width</span>
+      <span id="bRectWLabel" class="muted">60%</span>
+    </div>
+    <input id="bRectW" type="range" min="5" max="100" step="1" value="60" />
+
+    <div class="row" style="justify-content:space-between; margin-top:10px;">
+      <span class="muted">Height</span>
+      <span id="bRectHLabel" class="muted">60%</span>
+    </div>
+    <input id="bRectH" type="range" min="5" max="100" step="1" value="60" />
+
+    <div class="row" style="justify-content:space-between; margin-top:10px;">
+      <span class="muted">Fill</span>
+      <span id="bRectFillLabel" class="muted">100%</span>
+    </div>
+    <input id="bRectFill" type="range" min="0" max="100" step="1" value="100" />
+  </div>
+</div>
+  <!-- CIRCLE (B) -->
+  <div id="ui-circle-b" style="display:none;">
+    <div class="module">
+      <h4>Circle</h4>
+      <div class="muted">Coming soon.</div>
+    </div>
+  </div>
+
+  <!-- WAVE (B) -->
+  <div id="ui-wave-b" style="display:none;">
+    <div class="module">
+      <h4>Wave</h4>
+      <div class="muted">Coming soon.</div>
+    </div>
+  </div>
+
+</div>
+<div class="module">
         <h4>Shapes</h4>
         <div class="row">
-          <button type="button" disabled>+ Circle</button>
-          <button type="button" disabled>+ Rect</button>
+          <button id="btnBShapeCircle" type="button">Circle</button>
+          <button id="btnBShapeRect" type="button">Rect</button>
         </div>
         <div class="row">
-          <button type="button" disabled>+ Line</button>
-          <button type="button" disabled>+ Wave</button>
+          <button id="btnBShapeLine" type="button">Line</button>
+          <button id="btnBShapeWave" type="button">Wave</button>
         </div>
         <div class="muted">V1: zatím jen struktura (přidáme po routingu).</div>
       </div>
@@ -170,10 +308,11 @@
   </div>
 
   <!-- Scripts -->
-  <script src="js/state.js"></script>
-  <script src="js/derived.js"></script>
-  <script src="js/liveview.js"></script>
-  <script src="js/ddp_client.js"></script>
-  <script type="module" src="js/show.js"></script>
+  <script src="./js/state.js"></script>
+<script src="./js/derived.js"></script>
+<script src="./js/liveview.js"></script>
+<script src="./js/ddp_client.js"></script>
+
+<script type="module" src="./js/show.js"></script>
 </body>
 </html>

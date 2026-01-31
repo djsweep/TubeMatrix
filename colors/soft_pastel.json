@@ -1,0 +1,6 @@
+{
+  "name": "Soft Pastel",
+  "colors": ["#F6E7D8", "#EBD5E0", "#D6E5EA"],
+  "transition": "smooth",
+  "speed": 0.08
+}
