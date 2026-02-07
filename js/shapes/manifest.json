@@ -1,0 +1,55 @@
+{
+  "version": 1,
+  "shapes": [
+    {
+      "id": "line",
+      "label": "Line",
+      "module": "./line.js",
+      "export": "renderLineMask",
+      "defaults": {
+        "length": 1.0,
+        "strokePx": 1,
+        "angleDeg": 0,
+        "x": 0,
+        "y": 0
+      },
+      "ui": {
+        "lenLabel": "Length",
+        "thickLabel": "Stroke",
+        "uses": {
+          "len": true,
+          "thick": true,
+          "rot": true,
+          "fill": false,
+          "count": false
+        }
+      }
+    },
+    {
+      "id": "rect",
+      "label": "Rect",
+      "module": "./rect.js",
+      "export": "renderRectMask",
+      "defaults": {
+        "width": 60,
+        "height": 60,
+        "angle": 0,
+        "fill": 100,
+        "strokePx": 1,
+        "x": 0,
+        "y": 0
+      },
+      "ui": {
+        "lenLabel": "Width",
+        "thickLabel": "Height / Stroke",
+        "uses": {
+          "len": true,
+          "thick": true,
+          "rot": true,
+          "fill": true,
+          "count": false
+        }
+      }
+    }
+  ]
+}

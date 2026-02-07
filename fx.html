@@ -34,6 +34,56 @@
       margin-top: 6px;
       text-align: center;
     }
+    /* ===== FX layout (stejné chování jako Live) ===== */
+
+#main {
+  display: flex;
+  height: calc(100vh - 50px); /* topbar */
+}
+
+/* levý panel */
+#panel-left {
+  flex: 0 0 280px;
+  overflow-y: auto;
+}
+
+/* pravý panel */
+#panel-right {
+  flex: 0 0 300px;
+  overflow-y: auto;
+}
+
+/* STŘED = PREVIEW */
+#center {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+/* CANVAS – ať fakt vyplní střed */
+/* velký rám (zůstane velký) */
+#previewBox {
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;              /* okraj kolem obrazu */
+  box-sizing: border-box;
+}
+
+/* skutečný obraz uvnitř (zmenšený) */
+#fxPreview {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
   </style>
 </head>
 
@@ -41,7 +91,7 @@
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <h1>FX Generator (MVP)</h1>
+  <h1>FX Generator</h1>
   <a href="./index.html">← Back to Live</a>
 </div>
 
@@ -56,32 +106,30 @@
       <div class="row">
         <span class="muted">Type</span>
         <select id="fxShapeType">
-          <option value="line">Line</option>
-          <option value="rect">Rect</option>
         </select>
       </div>
     </div>
 
     <div class="module">
       <div class="row">
-        <span class="muted">Length / Width</span>
-        <input type="range" min="0" max="100" value="80" />
+        <span class="muted" id="fxLenLabel">Length</span>
+        <input id="fxLen" type="range" min="0" max="100" value="80" />
       </div>
       <div class="row">
-        <span class="muted">Thickness / Height</span>
-        <input type="range" min="0" max="100" value="12" />
+        <span class="muted" id="fxThickLabel">Thickness</span>
+        <input id="fxThick" type="range" min="0" max="100" value="12" />
       </div>
       <div class="row">
-        <span class="muted">Rotation</span>
-        <input type="range" min="0" max="360" value="0" />
+        <span class="muted" id="fxRotLabelText">Rotation</span>
+        <input id="fxRot" type="range" min="0" max="360" value="0" />
       </div>
       <div class="row">
-        <span class="muted">Count</span>
-        <input type="range" min="1" max="10" value="1" />
+        <span class="muted" id="fxCountLabelText">Count</span>
+        <input id="fxCount" type="range" min="1" max="10" value="1" />
       </div>
       <div class="row">
         <label>
-          <input type="checkbox" checked />
+          <input id="fxFill" type="checkbox" checked />
           <span class="muted">Fill</span>
         </label>
       </div>
@@ -94,9 +142,9 @@
     <h3 style="text-align:center;">Preview</h3>
 
     <!-- stejný canvas jako Live (jen náhled) -->
-    <canvas id="fxPreview" width="400" height="200"
-            style="background:#000; width:100%; max-width:640px; display:block; margin:10px auto;">
-    </canvas>
+    <div id="previewBox">
+        <canvas id="fxPreview"></canvas>
+    </div>
 
     <div class="hint">
       Preview je jen náhled masky + pohybu<br>
@@ -123,27 +171,58 @@
     <div class="module">
       <div class="row">
         <span class="muted">Speed</span>
-        <input type="range" min="0" max="100" value="25" />
+        <input id="fxSpeed" type="range" min="0" max="100" value="25" />
       </div>
     </div>
 
+<div class="module">
+  <div class="row" style="align-items:center; gap:10px;">
+    <label style="display:flex; align-items:center; gap:8px;">
+      <input id="fxSendTL" type="checkbox">
+      <span class="muted">Send to TL</span>
+    </label>
+  </div>
+
+  <div class="row" style="gap:10px; margin-top:8px;">
+    <span class="muted">DDP WS</span>
+    <input id="fxWsUrl" type="text" value="ws://localhost:8787" style="flex:1;">
+  </div>
+
+  <div class="row" style="gap:10px; margin-top:8px;">
+    <button id="fxBtnConnect" style="width:100%;">CONNECT</button>
+  </div>
+</div>
+
     <div class="module">
-      <button style="width:100%;">SAVE FX</button>
-      <button style="width:100%; margin-top:6px;">LOAD FX</button>
+        <button id="fxBtnNew" style="width:100%;">NEW</button>
+        <button id="fxBtnSave" style="width:100%; margin-top:6px;">SAVE</button>
+        <button id="fxBtnLoad" style="width:100%; margin-top:6px;">LOAD</button>
+        <button id="fxBtnDelete" style="width:100%; margin-top:6px;">DELETE</button>
     </div>
+        <div class="module">
+  <div class="row" style="justify-content:space-between; gap:10px;">
+    <span class="muted">Palette</span>
+    <select id="fxPaletteSelect" style="flex:1;"></select>
+  </div>
+
+  <div class="row" style="justify-content:space-between; gap:10px; margin-top:8px;">
+    <span class="muted">Palette speed</span>
+    <input id="fxPaletteSpeed" type="range" min="1" max="100" value="15" style="flex:1;">
+    <span id="fxPaletteSpeedLabel" class="muted" style="width:44px; text-align:right;">15</span>
+  </div>
+</div>
 
   </div>
 
 </div>
 
 <!-- ZATÍM BEZ LOGIKY – jen kostra -->
-<script>
-  // TODO:
-  // - propojit slidery do FX objektu
-  // - render masky do canvasu
-  // - SAVE -> JSON do /fx/
-  // - LOAD -> JSON ze /fx/
-</script>
+<script src="./js/state.js"></script>
+<script src="./js/derived.js"></script>
+<script src="./js/liveview.js"></script>
+<script src="./js/ddp_client.js"></script>
+
+<script type="module" src="./js/fx_show.js"></script>
 
 </body>
 </html>
